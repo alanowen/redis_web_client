@@ -1,25 +1,42 @@
 import axios from 'axios'
-import env from '../config/env'
+import env from '~/config/env'
+
+
+let ajaxUrl = env === 'development' ? 'http://127.0.0.1:5000' : config.apiServer
+
 
 let util = {
+    ajaxUrl,
 
+    ajax: axios.create(
+        {
+            baseURL: ajaxUrl,
+            paramsSerializer: function (params) {
+                return JSON.parse(JSON.stringify(params))
+            },
+            //withCredentials: true
+        }
+    )
 }
 
-
-const ajaxUrl = env === 'development' ? 'http://127.0.0.1:5000' : config.apiServer
-
-
-let ajax = axios.create({
-    baseURL: ajaxUrl,
-    paramsSerializer: function (params) {
-        return JSON.parse(JSON.stringify(params))
-    },
-    onDownloadProgress: function (progressEvent) {
-        //let percentCompleted = Math.floor((progressEvent.loaded * 100) / progressEvent.total)
+util.ajax.interceptors.request.use(
+    function (config) {
+        return config
+    }, 
+    
+    function (error) {
+        return Promise.reject(error)
     }
-})
+)
 
-util.ajax = ajax
-util.ajaxUrl = ajaxUrl
+util.ajax.interceptors.response.use(
+    function (response) {
+        return response
+    },
+
+    function (error) {
+        return Promise.reject(error)
+    }
+)
 
 export default util

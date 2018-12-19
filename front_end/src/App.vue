@@ -1,18 +1,5 @@
 <template>
-    <el-container>
-        <el-header>
-
-        </el-header>
-        <el-container>
-            <el-aside>
-            </el-aside>
-            <el-main>
-                <router-view></router-view>
-            </el-main>
-        </el-container>
-
-
-    </el-container>
+    <router-view></router-view>
 </template>
 
 <script>

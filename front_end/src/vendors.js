@@ -1,2 +1,5 @@
 import Vue from 'vue'
+import axios from 'axios'
+import Vuex from 'vuex'
+import VueRouter from 'vue-router'
 import ElementUI from 'element-ui'

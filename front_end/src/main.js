@@ -6,7 +6,8 @@ import App from './App.vue';
 import store from './store'
 import router from './router'
 
-Vue.use(ElementUI);
+
+Vue.use(ElementUI, { size: 'small' });
 
 new Vue({
   el: '#app',
