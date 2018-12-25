@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import * as ActionTypes from '@@ActionTypes'
+import * as ActionTypes from '~/store/action-types'
 
 export default {
     data() {

@@ -12,6 +12,8 @@ class SignupForm(FlaskForm):
     """
     email = StringField()
 
+    username = StringField()
+
     password = PasswordField()
 
     def validate_email(self, field):

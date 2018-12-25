@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import * as ActionTypes from '@@ActionTypes'
+import * as ActionTypes from '~/store/action-types'
 
 export default {
     data() {
@@ -41,12 +41,22 @@ export default {
 
     methods: {
         submitForm() {
+
             this.$refs.form.validate(valid => {
                 if (valid) {
                     this.$store.dispatch(ActionTypes.LOGIN, {...this.form}).then(data => {
-
-                    }).catch(error => {
-                        
+                        this.$message({
+                            message: 'Congrats, you`ve logged in.',
+                            type: 'success',
+                            duration: 800,
+                            onClose: () => {
+                                if ('nextUrl' in this.$route.query) {
+                                    this.$router.replace(this.$route.query['nextUrl'])
+                                } else {
+                                    this.$router.replace({ name: 'home' })
+                                }
+                            }
+                        })
                     })
                 }
                 return false

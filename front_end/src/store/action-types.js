@@ -1,2 +1,11 @@
 export const LOGIN = 'LOGIN'
+export const LOGOUT = 'LOGOUT'
 export const SIGNUP = 'SIGNUP'
+export const RELOGIN = 'RELOGIN'
+
+export const COMMON_ADD_TAB = 'COMMON_ADD_TAB'
+
+export const REDIS_ADD_SERVER = 'REDIS_ADD_SERVER'
+export const REDIS_GET_SERVERS = 'REDIS_GET_SERVERS'
+export const REDIS_GET_DATABASES = 'REDIS_GET_DATABASES'
+export const REDIS_AUTHENTICATE_SERVER = 'REDIS_AUTHENTICATE_SERVER'

@@ -13,11 +13,12 @@ def signup():
     :return:
     """
     form = SignupForm()
-
     if form.validate():
         model = User(email=form.email.data,
-                     password=form.email.data)
+                     username=form.username.data,
+                     password=form.password.data)
         db.session.add(model)
         db.session.commit()
+        return jsonify([])
     else:
         return jsonify(formError=form.errors)
