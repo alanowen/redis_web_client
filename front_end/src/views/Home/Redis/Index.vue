@@ -16,12 +16,14 @@
             </el-col>
             <el-col :span="18">
                 <div class="grid-content">
-                    <el-tabs v-model="currentDatabase" type="card" v-show="redisDatabaseTabs.length != 0">
-                        <el-tab-pane 
+                    <el-tabs :value="activeTab.tabName" type="card" v-show="redisServerDbTabs.length != 0" @tab-remove="removeTab">
+                        <el-tab-pane
+                            :key="item.tabName"
+                            closable 
                             :label="item.tabLabel" 
                             :name="item.tabName" 
-                            v-for="item in redisDatabaseTabs">
-                            <key-list></key-list>
+                            v-for="(item, index) in redisServerDbTabs">
+                            <key-list :server-id="activeTab.serverId" :db-num="activeTab.dbNum"></key-list>
                         </el-tab-pane>
                     </el-tabs>
                 </div>
@@ -60,14 +62,17 @@ export default {
     components: {
         KeyList
     },
-    
     computed: {
-        ...mapState(['redisServerList', 'redisDatabaseTabs'])
+        ...mapState(['redisServerList', 'redisServerDbTabs'])
     },
 
     data() {
         return {
-            currentDatabase: null,
+            activeTab: {
+                tabName: null,
+                serverId: null,
+                dbNum: null,
+            },
 
             dialogVisible: false,
 
@@ -89,7 +94,7 @@ export default {
     },
 
     mounted() {
-        this.$store.dispatch(ActionTypes.REDIS_GET_SERVERS)
+        this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_SERVERS)
     },
 
     methods: {
@@ -99,28 +104,46 @@ export default {
                 return resolve([])
             }
 
-            this.$store.dispatch(ActionTypes.REDIS_GET_DATABASES, node.data.value).then(data => {
+            this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_DATABASES, node.data.value).then(data => {
                 resolve(data)
             })
             
         },
 
         saveRedisServer() {
-            this.$store.dispatch(ActionTypes.REDIS_ADD_SERVER, {...this.form})
+            this.$store.dispatch(ActionTypes.REDIS_SERVER_ADD_SERVER, {...this.form})
         },
 
         freshDatabases() {
-            this.$store.dispatch(ActionTypes.REDIS_GET_SERVERS)
+            this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_SERVERS)
+        },
+
+        removeTab(targetName) {
+            let activeName = this.activeTab.tabName
+            let tabs = this.redisServerDbTabs
+            if (activeName === targetName) {
+                this.redisServerDbTabs.forEach((tab, index) => {
+                    if (tab.tabName === targetName) {
+                        let nextTab = tabs[index + 1] || tabs[index - 1]
+                        if (nextTab) {
+                            activeName = nextTab.tabName
+                        }
+                    }
+                })
+            }
+            this.activeTab.tabName = activeName
+            this.$store.state.redisServerDbTabs = tabs.filter(tab => tab.tabName !== targetName)
         },
 
         clickDatabase(data, node) {
+
             if (node.level == 1) {
 
             }
 
             if (node.level == 2) {
                 let tabName = `${node.parent.data.value}-${data.value}`
-                let tab = this.redisDatabaseTabs.find(i => i.tabName === tabName)
+                let tab = this.redisServerDbTabs.find(i => i.tabName === tabName)
                 if (tab == null) {
                     let tab = {
                         tabName: `${node.parent.data.value}-${data.value}`,
@@ -128,7 +151,9 @@ export default {
                     }
                     this.$store.dispatch(ActionTypes.COMMON_ADD_TAB, tab)
                 }
-                this.currentDatabase = tabName
+                this.activeTab.tabName = tabName
+                this.activeTab.serverId = node.parent.data.value
+                this.activeTab.dbNum = data.value
             }
         }
     }

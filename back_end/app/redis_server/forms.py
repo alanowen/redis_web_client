@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField
 from wtforms.validators import ValidationError
 
-from app.models import RedisServerConnection
+from app.models import RedisServer
 from utils.wtf import BindNameMeta
 
 
@@ -25,8 +25,8 @@ class RedisServerConnectionForm(FlaskForm):
     password = StringField()
 
     def validate_connection_name(self, field):
-        model = RedisServerConnection.query.filter(RedisServerConnection.connection_name == field.data,
-                                                   RedisServerConnection.user_id == g.current_user.id).first()
+        model = RedisServer.query.filter(RedisServer.connection_name == field.data,
+                                         RedisServer.user_id == g.current_user.id).first()
 
         if model:
             raise ValidationError('Connection name already exists.')

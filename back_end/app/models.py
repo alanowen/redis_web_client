@@ -9,7 +9,7 @@ from app import db
 
 class User(db.Model):
     """
-    用户
+    User
     """
 
     __tablename__ = 'users'
@@ -24,7 +24,7 @@ class User(db.Model):
 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    redis_connections = db.relationship('RedisServerConnection', backref='user', lazy='dynamic')
+    redis_servers = db.relationship('RedisServer', backref='user', lazy='dynamic')
 
     @property
     def password(self):
@@ -62,13 +62,16 @@ class User(db.Model):
             return None
         return data.get('id')
 
+    def get_redis_server(self, redis_server_id):
+        return self.redis_servers.filter_by(id=redis_server_id).first()
 
-class RedisServerConnection(db.Model):
+
+class RedisServer(db.Model):
     """
-    redis数据库连接信息
+    Redis server
     """
 
-    __tablename__ = 'redis_server_connections'
+    __tablename__ = 'redis_servers'
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -78,19 +81,9 @@ class RedisServerConnection(db.Model):
 
     port = db.Column(db.Integer, nullable=False)
 
-    password_hash = db.Column(db.String(128))
+    password = db.Column(db.String(128))
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    @property
-    def password(self):
-        raise AttributeError('Password is not readable attribute')
-
-    @password.setter
-    def password(self, value):
-        self.password_hash = generate_password_hash(value)
-
-    def verify_password(self, value):
-        return check_password_hash(self.password_hash, value)

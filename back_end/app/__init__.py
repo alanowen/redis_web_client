@@ -19,11 +19,13 @@ def create_app(config_name):
     from app.main import main_bp
     from app.auth import auth_bp
     from app.user import user_bp
+    from app.redis_db import redis_db_bp
     from app.redis_server import redis_server_bp
 
     app.register_blueprint(main_bp, url_prefix='/')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(user_bp, url_prefix='/user')
+    app.register_blueprint(redis_db_bp, url_prefix='/redis_db/<int:redis_server_id>/<int:redis_db_num>')
     app.register_blueprint(redis_server_bp, url_prefix='/redis_server')
 
     @app.errorhandler(404)

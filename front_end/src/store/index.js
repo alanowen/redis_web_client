@@ -14,12 +14,12 @@ export default new Vuex.Store({
 
         redisServerList: [],
 
-        redisDatabaseTabs: []
+        redisServerDbTabs: [],
     },
 
     mutations: {
 
-        [MutationTypes.REDIS_GET_SERVERS](state, data) {
+        [MutationTypes.REDIS_SERVER_GET_SERVERS](state, data) {
             state.redisServerList = data
         }
     },
@@ -35,11 +35,12 @@ export default new Vuex.Store({
 
         [ActionTypes.LOGOUT]({ state }) {
             state.token = null
+            state.redisServerDbTabs = []
             window.localStorage.clear()
         },
 
-        async [ActionTypes.LOGIN]({ state }, params) {
-            let { data } = await util.ajax.post('/auth/login', params)
+        async [ActionTypes.LOGIN]({ state }, form) {
+            let { data } = await util.ajax.post('/auth/login', form)
             let { token } = data
             if (token != undefined) {
                 state.token = token
@@ -48,16 +49,23 @@ export default new Vuex.Store({
             }
         },
 
-        async [ActionTypes.SIGNUP](context, params) {
-            let { data } = await util.ajax.post('/user/signup', params)
+        async [ActionTypes.SIGNUP](context, form) {
+            let { data } = await util.ajax.post('/user/signup', form)
             return data
         },
 
-        [ActionTypes.COMMON_ADD_TAB]({ state }, params) {
-            state.redisDatabaseTabs.push(params)    
+        [ActionTypes.COMMON_ADD_TAB]({ state }, tab) {
+            state.redisServerDbTabs.push(tab)    
         },
 
-        [ActionTypes.REDIS_AUTHENTICATE_SERVER](context, data) {
+        [ActionTypes.COMMON_REMOVE_TAB]({ state }, name) {
+            let index = state.redisServerDbTabs.findIndex(i => i.tabName == name)
+            if (index > -1) {
+                state.redisServerDbTabs.splice(index, 1)
+            }
+        },
+
+        [ActionTypes.REDIS_SERVER_AUTHENTICATE](context, data) {
             let promise = new Promise((resolve, reject) => {
                 util.ajax.post('/redis_server/auth', data).then(({ data }) => {
                     resolve(data)
@@ -66,13 +74,13 @@ export default new Vuex.Store({
             return promise
         },
 
-        async [ActionTypes.REDIS_GET_SERVERS]({ state }, params) {
+        async [ActionTypes.REDIS_SERVER_GET_SERVERS]({ state }, params) {
             let { data } = await util.ajax.post('/redis_server/list', params)
             state.redisServerList = data
             return data
         },
 
-        [ActionTypes.REDIS_ADD_SERVER](context, data) {
+        [ActionTypes.REDIS_SERVER_ADD_SERVER](context, data) {
             let promsie = new Promise((resolve, reject) => {
                 util.ajax.post('/redis_server/add', data).then(({ data }) => {
                     resolve(data)
@@ -81,10 +89,15 @@ export default new Vuex.Store({
             return promsie
         },
 
-        async [ActionTypes.REDIS_GET_DATABASES]({ state }, connectionId) {
+        async [ActionTypes.REDIS_SERVER_GET_DATABASES]({ state }, connectionId) {
             let { data } = await util.ajax.get(`/redis_server/${connectionId}/databases`)
             const node = state.redisServerList.find(i => i.value == connectionId)
             node['children'] = data
+            return data
+        },
+
+        async [ActionTypes.REDIS_DB_GET_KEYS](context, { serverId, dbNum }) {
+            let { data } = await util.ajax.get(`/redis_db/${serverId}/${dbNum}/key_list`)
             return data
         }
     },
