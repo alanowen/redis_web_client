@@ -10,7 +10,7 @@ from . import redis_server_bp
 @redis_server_bp.route('/auth', methods=['POST'])
 @multi_auth.login_required
 def validate_redis_server():
-    form = forms.RedisServerConnectionForm()
+    form = forms.RedisServerEditForm()
     if form.validate_on_submit():
         try:
             redis = Redis(host=form.host.data, port=form.port.data)
@@ -24,7 +24,7 @@ def validate_redis_server():
 @redis_server_bp.route('/add', methods=['POST'])
 @multi_auth.login_required
 def add_redis_server():
-    form = forms.RedisServerConnectionForm()
+    form = forms.RedisServerEditForm()
     try:
         if form.validate_on_submit():
             model = RedisServer()

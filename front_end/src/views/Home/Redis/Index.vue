@@ -1,28 +1,48 @@
 <template>
     <div>
-        <el-row>
-            <el-col :span="6">
+        <el-row type="flex" :gutter="20">
+            <el-col :span="4">
                 <div class="grid-content">
-                    <el-button @click="dialogVisible = true">Add Server</el-button>
+                    <el-button @click="editDialogVisible = true">Add Server</el-button>
                     <el-button @click="freshDatabases">Refresh</el-button>
                     <el-tree 
                         :data="redisServerList" 
                         lazy 
                         :load="loadDatabases"
-                        :props="dataBaseTreeProps"
+                        highlight-current
+                        :props="redisServerTreeProps"
                         @node-click="clickDatabase">
+                        <span class="custom-tree-node" slot-scope="{ node, data }">
+                            {{ node.label }}
+                            <template v-if="node.level === 1">
+                                <span>
+                                    <el-button
+                                        type="text"
+                                        size="mini"
+                                        @click.stop="() => openEditDialog(node, data)">
+                                        Edit
+                                    </el-button>
+                                    <el-button
+                                        type="text"
+                                        size="mini"
+                                        @click="() => remove(node, data)">
+                                        Delete
+                                    </el-button>
+                                </span>
+                            </template>
+                        </span>
                     </el-tree>
                  </div>
             </el-col>
-            <el-col :span="18">
+            <el-col :span="20">
                 <div class="grid-content">
-                    <el-tabs :value="activeTab.tabName" type="card" v-show="redisServerDbTabs.length != 0" @tab-remove="removeTab">
+                    <el-tabs v-model="activeTab.tabName" type="card" v-show="redisServerTabs.length != 0" @tab-remove="removeTab">
                         <el-tab-pane
                             :key="item.tabName"
                             closable 
                             :label="item.tabLabel" 
                             :name="item.tabName" 
-                            v-for="(item, index) in redisServerDbTabs">
+                            v-for="(item, index) in redisServerTabs">
                             <key-list :server-id="activeTab.serverId" :db-num="activeTab.dbNum"></key-list>
                         </el-tab-pane>
                     </el-tabs>
@@ -30,23 +50,44 @@
             </el-col>
         </el-row>
 
-        <el-dialog :visible.sync="dialogVisible">
-            <el-form :model="form">
-                <el-form-item label="Connection Name" :label-width="labelWidth">
+        <el-dialog :visible.sync="editDialogVisible">
+            <el-form :model="form" ref="form">
+                <el-form-item 
+                    label="Connection Name" 
+                    :label-width="labelWidth" 
+                    prop="connectionName"
+                    :rules="[
+                        { required: true, message: 'Connection name is required.' }
+                    ]">
                     <el-input v-model="form.connectionName" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="Host" :label-width="labelWidth">
+                <el-form-item 
+                    label="Host" 
+                    :label-width="labelWidth" 
+                    prop="host"
+                    :rules="[
+                        { required: true, message: 'Host is required.' }
+                    ]">
                     <el-input v-model="form.host" autocomplete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="Port" :label-width="labelWidth">
+                <el-form-item 
+                    label="Port" 
+                    :label-width="labelWidth" 
+                    prop="port"
+                    :rules="[
+                        { required: true, message: 'Port is required.' }
+                    ]">
                     <el-input v-model="form.port" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="Password" :label-width="labelWidth">
+                <el-form-item 
+                    label="Password" 
+                    :label-width="labelWidth" 
+                    prop="password">
                     <el-input v-model="form.password" auto-complete="off"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button @click="dialogVisible = false">Cancel</el-button>
+                <el-button @click="closeEditDialog">Cancel</el-button>
                 <el-button type="primary" @click="saveRedisServer">Confirm</el-button>
             </span>
         </el-dialog>  
@@ -63,7 +104,17 @@ export default {
         KeyList
     },
     computed: {
-        ...mapState(['redisServerList', 'redisServerDbTabs'])
+        ...mapState(['redisServerList', 'redisServerTabs'])
+    },
+
+    watch: {
+        editDialogVisible(n, o) {
+            if (n) {
+                if (this.$refs.form != undefined) {
+                    this.$refs.form.resetFields()
+                }
+            }
+        }
     },
 
     data() {
@@ -74,18 +125,19 @@ export default {
                 dbNum: null,
             },
 
-            dialogVisible: false,
+            editDialogVisible: false,
 
             labelWidth: '',
 
             form: {
+                id: null,
                 connectionName: null,
                 host: '127.0.0.1',
                 port: 6379,
                 password: null
             },
 
-            dataBaseTreeProps: {
+            redisServerTreeProps: {
                 label: 'label',
                 children: 'children',
                 isLeaf: 'leaf'
@@ -111,7 +163,13 @@ export default {
         },
 
         saveRedisServer() {
-            this.$store.dispatch(ActionTypes.REDIS_SERVER_ADD_SERVER, {...this.form})
+            this.$refs.form.validate(validate => {
+                if (validate) {
+                    this.$store.dispatch(ActionTypes.REDIS_SERVER_ADD_SERVER, {...this.form})
+                    return true
+                }
+                return false
+            })
         },
 
         freshDatabases() {
@@ -120,9 +178,9 @@ export default {
 
         removeTab(targetName) {
             let activeName = this.activeTab.tabName
-            let tabs = this.redisServerDbTabs
+            let tabs = this.redisServerTabs
             if (activeName === targetName) {
-                this.redisServerDbTabs.forEach((tab, index) => {
+                this.redisServerTabs.forEach((tab, index) => {
                     if (tab.tabName === targetName) {
                         let nextTab = tabs[index + 1] || tabs[index - 1]
                         if (nextTab) {
@@ -131,8 +189,8 @@ export default {
                     }
                 })
             }
+            this.$store.state.redisServerTabs = tabs.filter(tab => tab.tabName !== targetName)
             this.activeTab.tabName = activeName
-            this.$store.state.redisServerDbTabs = tabs.filter(tab => tab.tabName !== targetName)
         },
 
         clickDatabase(data, node) {
@@ -143,7 +201,7 @@ export default {
 
             if (node.level == 2) {
                 let tabName = `${node.parent.data.value}-${data.value}`
-                let tab = this.redisServerDbTabs.find(i => i.tabName === tabName)
+                let tab = this.redisServerTabs.find(i => i.tabName === tabName)
                 if (tab == null) {
                     let tab = {
                         tabName: `${node.parent.data.value}-${data.value}`,
@@ -155,6 +213,18 @@ export default {
                 this.activeTab.serverId = node.parent.data.value
                 this.activeTab.dbNum = data.value
             }
+        },
+
+        openEditDialog(node, data) {
+            this.editDialogVisible = true
+        },
+
+        closeEditDialog() {
+            this.editDialogVisible = false
+        },
+
+        remove(node, data) {
+
         }
     }
 }
@@ -164,4 +234,14 @@ export default {
 .grid-content {
 
 }
+
+.custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    padding-right: 8px;
+}
 </style>
+

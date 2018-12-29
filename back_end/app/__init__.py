@@ -1,4 +1,4 @@
-from flask import Flask, logging, jsonify, request
+from flask import Flask, logging, jsonify, request, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, HTTPDigestAuth, MultiAuth
 
@@ -32,11 +32,14 @@ def create_app(config_name):
     def handle_page_not_found_error(e):
         raise e
 
-    @app.errorhandler(500)
+    @app.errorhandler(Exception)
     def handle_internal_error(e):
         logger = logging.create_logger(app)
-        logger.error(e)
-        return jsonify(error=str(e))
+        if app.debug:
+            logger.exception(e)
+        else:
+            logger.error(e)
+        return make_response('INTERNAL SERVER ERROR'), 500
 
     @app.after_request
     def after_request(response):

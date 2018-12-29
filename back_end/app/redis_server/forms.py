@@ -4,15 +4,12 @@ from wtforms import StringField, IntegerField
 from wtforms.validators import ValidationError
 
 from app.models import RedisServer
-from utils.wtf import BindNameMeta
 
 
-class RedisServerConnectionForm(FlaskForm):
+class RedisServerEditForm(FlaskForm):
     """
     Redis server connection
     """
-
-    Meta = BindNameMeta
 
     id = StringField()
 

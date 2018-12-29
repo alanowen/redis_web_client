@@ -6,7 +6,7 @@ from redis import Redis
 from app import multi_auth
 
 
-def user_redis(view_func):
+def use_redis(view_func):
 
     func = _wrap_login(_wrap_redis(view_func))
 
