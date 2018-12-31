@@ -1,35 +1,39 @@
 <template>
     <div class="container">
         <div class="grid-content">
-            <el-button @click="addRedisServer">Add Server</el-button>
-            <el-button @click="freshDatabases">Refresh</el-button>
-            <el-tree 
-                :data="redisServerList" 
-                lazy 
-                :load="loadDatabases"
-                highlight-current
-                :props="redisServerTreeProps"
-                @node-click="clickDatabase">
-                <span class="custom-tree-node" slot-scope="{ node, data }">
-                    {{ node.label }}
-                    <template v-if="node.level === 1">
-                        <span>
-                            <el-button
-                                type="text"
-                                size="mini"
-                                @click.stop="() => editRedisServer(node, data)">
-                                Edit
-                            </el-button>
-                            <el-button
-                                type="text"
-                                size="mini"
-                                @click="() => remove(node, data)">
-                                Delete
-                            </el-button>
-                        </span>
-                    </template>
-                </span>
-            </el-tree>
+            <div class="server-btns">
+                <el-button @click="addRedisServer">Add Server</el-button>
+                <el-button @click="freshDatabases">Refresh</el-button>
+            </div>
+            <div class="server-list">
+                <el-tree 
+                    :data="redisServerList" 
+                    lazy 
+                    :load="loadDatabases"
+                    highlight-current
+                    :props="redisServerTreeProps"
+                    @node-click="clickDatabase">
+                    <span class="custom-tree-node" slot-scope="{ node, data }">
+                        {{ node.label }}
+                        <template v-if="node.level === 1">
+                            <span>
+                                <el-button
+                                    type="text"
+                                    size="mini"
+                                    @click.stop="() => editRedisServer(node, data)">
+                                    Edit
+                                </el-button>
+                                <el-button
+                                    type="text"
+                                    size="mini"
+                                    @click="() => remove(node, data)">
+                                    Delete
+                                </el-button>
+                            </span>
+                        </template>
+                    </span>
+                </el-tree>
+            </div>
         </div>
         <div class="grid-content">
             <el-tabs v-model="activeTab.tabName" type="card" v-show="redisServerTabs.length != 0" @tab-remove="removeTab">
@@ -246,6 +250,13 @@ export default {
             flex-grow: 0;
             width: 300px;
             padding-right: 20px;
+
+            .server-btns {
+                margin-bottom: 15px;
+            }
+
+            .server-list {
+            }
         }
         &:nth-child(2) {
             flex-basis: auto;
