@@ -1,8 +1,9 @@
-from wtforms import Field
+from flask_wtf import FlaskForm
+from wtforms import Field, StringField, IntegerField
 from wtforms.meta import DefaultMeta
 
 
-class BindNameMeta(DefaultMeta):
+class BindNameMeta(FlaskForm.Meta):
 
     def __init__(self):
         super(BindNameMeta, self).__init__()
@@ -23,6 +24,24 @@ class DynamicValueField(Field):
     def process_formdata(self, valuelist):
         if valuelist:
             self.data = [i['value'] for i in valuelist if i and i.get('value')]
+
+
+class NullableIntegerField(IntegerField):
+
+    def __init__(self, label=None, validators=None, **kwargs):
+        super(NullableIntegerField, self).__init__(label, validators, **kwargs)
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            try:
+                value = valuelist[0]
+                if value == '':
+                    return None
+                else:
+                    self.data = int(valuelist[0])
+            except ValueError:
+                self.data = None
+                raise ValueError(self.gettext('Not a valid integer value'))
 
 
 class DynamicKeyValueField(Field):

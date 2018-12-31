@@ -25,23 +25,22 @@ def validate_redis_server():
 @multi_auth.login_required
 def add_redis_server():
     form = forms.RedisServerEditForm()
-    try:
-        if form.validate_on_submit():
+    if form.validate_on_submit():
+        if form.id.data:
+            model = RedisServer.query.get(form.id.data)
+        else:
             model = RedisServer()
-            model.connection_name = form.connection_name.data
-            model.host = form.host.data
-            model.port = form.port.data
-            model.user_id = g.current_user.id
-            if form.password.data:
-                model.password = form.password.data
-            db.session.add(model)
-            db.session.commit()
-            return jsonify([])
-    except Exception as e:
-        raise e
+        model.connection_name = form.connection_name.data
+        model.host = form.host.data
+        model.port = form.port.data
+        model.user_id = g.current_user.id
+        if form.password.data:
+            model.password = form.password.data
+        db.session.add(model)
+        db.session.commit()
+        return jsonify([])
 
-    else:
-        return jsonify(formError=form.errors)
+    return jsonify(formError=form.errors)
 
 
 @redis_server_bp.route('/list', methods=['POST'])
@@ -52,8 +51,8 @@ def get_redis_server_list():
         {
             'value': i.id,
             'label': i.connection_name,
-            # 'host': i.host,
-            # 'port': i.port,
+            'host': i.host,
+            'port': i.port,
             'children': []
         } for i in q]
     return jsonify(data)
@@ -62,18 +61,15 @@ def get_redis_server_list():
 @redis_server_bp.route('/<int:server_id>/databases', methods=['GET'])
 @multi_auth.login_required
 def get_databases_of_server(server_id):
-    try:
-        q = RedisServer.query.get(server_id)
-        data = []
-        for i in range(16):
-            redis = Redis(host=q.host, port=q.port, db=i)
-            if redis.dbsize() > 0:
-                data.append({
-                    'leaf': True,
-                    'label': i,
-                    'value': i
-                })
-        return jsonify(data)
-    except Exception as e:
-        return jsonify([])
+    q = RedisServer.query.get(server_id)
+    data = []
+    for i in range(16):
+        redis = Redis(host=q.host, port=q.port, db=i)
+        if redis.dbsize() > 0:
+            data.append({
+                'leaf': True,
+                'label': i,
+                'value': i
+            })
+    return jsonify(data)
 

@@ -23,7 +23,7 @@ def before_request():
 
 
 @redis_db_bp.after_request
-def teardown_request(response):
+def after_request(response):
     return response
 
 

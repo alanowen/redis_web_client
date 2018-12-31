@@ -48,8 +48,15 @@ util.ajax.interceptors.response.use(
                 case 401:
                     // not authorized
                     store.dispatch(ActionTypes.LOGOUT)
-                    router.replace({
-                        name: 'login',
+                    vm.$message({
+                        message: 'Session expired, please re-login.',
+                        duration: 1000,
+                        type: 'info',
+                        onClose: (self) => {
+                            router.replace({
+                                name: 'login',
+                            })
+                        }
                     })
                     break
                 case 403:

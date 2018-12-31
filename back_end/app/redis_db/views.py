@@ -5,67 +5,43 @@ from . import redis_db_bp
 from .decorators import use_redis
 
 
-@redis_db_bp.route('/key_list', methods=['GET'])
+@redis_db_bp.route('/key_list/<int:page>', methods=['GET'])
 @use_redis
-def get_keys_of_database():
-    # def query_key(size):
-    #     ele = yield
-    #     while True:
-    #         ele = yield g.redis.scan(ele, '*', size)
-    #
-    # def assemble_data(start=0, size=2):
-    #     p = query_key(size)
-    #     p.send(None)
-    #     cursor = p.send(start)
-    #     for i in cursor[1]:
-    #         key = i.decode('utf-8')
-    #         yield {
-    #             'index': '',
-    #             'key': key,
-    #             'type': g.redis.type(i).decode('utf-8').upper()
-    #         }
-    #     while cursor[0] != 0:
-    #         cursor = p.send(cursor[0])
-    #         for i in cursor[1]:
-    #             key = i.decode('utf-8')
-    #             yield {
-    #                 'index': '',
-    #                 'key': key,
-    #                 'type': g.redis.type(i).decode('utf-8').upper()
-    #             }
+def get_keys_of_database(page):
+    page_size = 20
 
-    def query_key(size):
-        ele = yield
-        while True:
-            ele = yield g.redis.scan(ele, '*', size)
+    total = g.redis.dbsize()
+    rows, data = [], []
+    start = (page - 1) * page_size
+    end = start + page_size
 
-    def assemble_data(start=0, size=2):
-        p = query_key(size)
-        p.send(None)
-        cursor = p.send(start)
-        for i in cursor[1]:
-            key = i.decode('utf-8')
-            yield {
-                'index': '',
-                'key': key,
-                'type': g.redis.type(i).decode('utf-8').upper()
+    for index, item in enumerate(g.redis.scan_iter('*', count=1000)):
+
+        if start <= index < end:
+            data.append(item)
+        elif index >= end:
+                break
+
+    for index, item in enumerate(data):
+        rows.append(
+            {
+                'index': start + index + 1,
+                'key': item.decode('utf-8'),
+                'type': g.redis.type(item).decode('utf-8').upper()
             }
-        while cursor[0] != 0:
-            cursor = p.send(cursor[0])
-            for i in cursor[1]:
-                key = i.decode('utf-8')
-                yield {
-                    'index': '',
-                    'key': key,
-                    'type': g.redis.type(i).decode('utf-8').upper()
-                }
+        )
 
-    return jsonify(list(assemble_data(0, 20)))
+    return jsonify(
+        {
+            'total': total,
+            'rows': rows
+        }
+    )
 
 
 @redis_db_bp.route('/save_key_value', methods=['POST'])
 @use_redis
-def add_key_value_to_database():
+def add_key_value():
     form = forms.KeyValueEditForm()
 
     if form.validate_on_submit():
@@ -85,3 +61,21 @@ def add_key_value_to_database():
         return jsonify([])
 
     return jsonify(formError=form.errors)
+
+
+@redis_db_bp.route('/delete_key', methods=['POST'])
+@use_redis
+def delete_key():
+    pass
+
+
+@redis_db_bp.route('/update_key_value', methods=['POST'])
+@use_redis
+def update_key_value():
+    pass
+
+
+@redis_db_bp.route('/rename_key', methods=['POST'])
+@use_redis
+def rename_key():
+    pass

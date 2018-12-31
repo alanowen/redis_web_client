@@ -93,13 +93,14 @@ export default new Vuex.Store({
             return data
         },
 
-        async [ActionTypes.REDIS_DB_GET_KEYS](context, { serverId, dbNum }) {
-            let data = await util.ajax.get(`/redis_db/${serverId}/${dbNum}/key_list`)
+        async [ActionTypes.REDIS_DB_GET_KEYS](context, { serverId, dbNum, page }) {
+            let data = await util.ajax.get(`/redis_db/${serverId}/${dbNum}/key_list/${page}`)
             return data
         },
 
         async [ActionTypes.REDIS_DB_SET_KEY_VALUE](context, { serverId, dbNum, params }) {
             let data = await util.ajax.post(`/redis_db/${serverId}/${dbNum}/save_key_value`, params)
+            return data
         }
     },
 

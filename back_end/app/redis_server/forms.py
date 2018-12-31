@@ -4,6 +4,7 @@ from wtforms import StringField, IntegerField
 from wtforms.validators import ValidationError
 
 from app.models import RedisServer
+from utils.wtf import NullableIntegerField, BindNameMeta
 
 
 class RedisServerEditForm(FlaskForm):
@@ -11,7 +12,9 @@ class RedisServerEditForm(FlaskForm):
     Redis server connection
     """
 
-    id = StringField()
+    Meta = BindNameMeta
+
+    id = NullableIntegerField()
 
     connection_name = StringField(custom_name='connectionName')
 

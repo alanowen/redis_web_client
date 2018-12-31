@@ -1,54 +1,48 @@
 <template>
-    <div>
-        <el-row type="flex" :gutter="20">
-            <el-col :span="4">
-                <div class="grid-content">
-                    <el-button @click="editDialogVisible = true">Add Server</el-button>
-                    <el-button @click="freshDatabases">Refresh</el-button>
-                    <el-tree 
-                        :data="redisServerList" 
-                        lazy 
-                        :load="loadDatabases"
-                        highlight-current
-                        :props="redisServerTreeProps"
-                        @node-click="clickDatabase">
-                        <span class="custom-tree-node" slot-scope="{ node, data }">
-                            {{ node.label }}
-                            <template v-if="node.level === 1">
-                                <span>
-                                    <el-button
-                                        type="text"
-                                        size="mini"
-                                        @click.stop="() => openEditDialog(node, data)">
-                                        Edit
-                                    </el-button>
-                                    <el-button
-                                        type="text"
-                                        size="mini"
-                                        @click="() => remove(node, data)">
-                                        Delete
-                                    </el-button>
-                                </span>
-                            </template>
+    <div class="container">
+        <div class="grid-content">
+            <el-button @click="addRedisServer">Add Server</el-button>
+            <el-button @click="freshDatabases">Refresh</el-button>
+            <el-tree 
+                :data="redisServerList" 
+                lazy 
+                :load="loadDatabases"
+                highlight-current
+                :props="redisServerTreeProps"
+                @node-click="clickDatabase">
+                <span class="custom-tree-node" slot-scope="{ node, data }">
+                    {{ node.label }}
+                    <template v-if="node.level === 1">
+                        <span>
+                            <el-button
+                                type="text"
+                                size="mini"
+                                @click.stop="() => editRedisServer(node, data)">
+                                Edit
+                            </el-button>
+                            <el-button
+                                type="text"
+                                size="mini"
+                                @click="() => remove(node, data)">
+                                Delete
+                            </el-button>
                         </span>
-                    </el-tree>
-                 </div>
-            </el-col>
-            <el-col :span="20">
-                <div class="grid-content">
-                    <el-tabs v-model="activeTab.tabName" type="card" v-show="redisServerTabs.length != 0" @tab-remove="removeTab">
-                        <el-tab-pane
-                            :key="item.tabName"
-                            closable 
-                            :label="item.tabLabel" 
-                            :name="item.tabName" 
-                            v-for="(item, index) in redisServerTabs">
-                            <key-list :server-id="activeTab.serverId" :db-num="activeTab.dbNum"></key-list>
-                        </el-tab-pane>
-                    </el-tabs>
-                </div>
-            </el-col>
-        </el-row>
+                    </template>
+                </span>
+            </el-tree>
+        </div>
+        <div class="grid-content">
+            <el-tabs v-model="activeTab.tabName" type="card" v-show="redisServerTabs.length != 0" @tab-remove="removeTab">
+                <el-tab-pane
+                    :key="item.tabName"
+                    closable 
+                    :label="item.tabLabel" 
+                    :name="item.tabName" 
+                    v-for="(item, index) in redisServerTabs">
+                    <key-list :server-id="activeTab.serverId" :db-num="activeTab.dbNum"></key-list>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
 
         <el-dialog :visible.sync="editDialogVisible">
             <el-form :model="form" ref="form">
@@ -107,16 +101,6 @@ export default {
         ...mapState(['redisServerList', 'redisServerTabs'])
     },
 
-    watch: {
-        editDialogVisible(n, o) {
-            if (n) {
-                if (this.$refs.form != undefined) {
-                    this.$refs.form.resetFields()
-                }
-            }
-        }
-    },
-
     data() {
         return {
             activeTab: {
@@ -158,7 +142,7 @@ export default {
 
             this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_DATABASES, node.data.value).then(data => {
                 resolve(data)
-            })
+            }).catch(error => {alert();resolve([])})
             
         },
 
@@ -215,7 +199,24 @@ export default {
             }
         },
 
-        openEditDialog(node, data) {
+        editRedisServer(node, data) {
+            if (this.$refs.form != undefined) {
+                this.$refs.form.resetFields()
+            }
+            this.form.id = data.value
+            this.form.connectionName = data.label
+            this.form.host = data.host
+            this.form.port = data.port
+            this.form.password = data.password
+
+            this.editDialogVisible = true
+        },
+
+        addRedisServer() {
+            if (this.$refs.form != undefined) {
+                console.log(this.$refs.form)
+                this.$refs.form.resetFields()
+            }
             this.editDialogVisible = true
         },
 
@@ -230,9 +231,28 @@ export default {
 }
 </script>
 
-<style>
-.grid-content {
+<style lang="stylus" scoped>
 
+.container {
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+
+    .grid-content {
+        &:nth-child(1) {
+            flex-shrink: 0;
+            flex-grow: 0;
+            width: 300px;
+            padding-right: 20px;
+        }
+        &:nth-child(2) {
+            flex-basis: auto;
+            flex-shrink: 1;
+            flex-grow: 1;
+        }
+    }
 }
 
 .custom-tree-node {
