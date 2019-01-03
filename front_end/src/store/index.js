@@ -15,11 +15,13 @@ export default new Vuex.Store({
         redisServerList: [],
 
         redisServerTabs: [],
+
+        redisDatabaseList: [],
     },
 
     mutations: {
 
-        [MutationTypes.REDIS_SERVER_GET_SERVERS](state, data) {
+        [MutationTypes.REDIS_SERVER_GET_SERVER_LIST](state, data) {
             state.redisServerList = data
         }
     },
@@ -39,15 +41,19 @@ export default new Vuex.Store({
             window.localStorage.clear()
         },
 
-        async [ActionTypes.LOGIN]({ state }, form) {
-            let data = await util.ajax.post('/auth/login', form)
-            state.token = data['token']
-            window.localStorage.setItem('token', state.token)
-            return state.token 
+        async [ActionTypes.LOGIN]({ state }, params) {
+            let data = await util.ajax.post('/auth/login', params)
+            if (data) {
+                state.token = data
+                window.localStorage.setItem('token', data)
+                return true
+            } else {
+                return false
+            }
         },
 
-        async [ActionTypes.SIGNUP](context, form) {
-            let data = await util.ajax.post('/user/signup', form)
+        async [ActionTypes.SIGNUP](context, params) {
+            let data = await util.ajax.post('/user/signup', params)
             return data
         },
 
@@ -71,34 +77,30 @@ export default new Vuex.Store({
             return promise
         },
 
-        async [ActionTypes.REDIS_SERVER_GET_SERVERS]({ state }, params) {
+        async [ActionTypes.REDIS_SERVER_GET_SERVER_LIST]({ state }, params) {
             let data = await util.ajax.post('/redis_server/list', params)
             state.redisServerList = data
             return data
         },
 
-        [ActionTypes.REDIS_SERVER_ADD_SERVER](context, data) {
-            let promsie = new Promise((resolve, reject) => {
-                util.ajax.post('/redis_server/add', data).then(({ data }) => {
-                    resolve(data)
-                }).catch(error => reject(error))
-            })
-            return promsie
+        async [ActionTypes.REDIS_SERVER_ADD_SERVER](context, params) {
+            const data = await util.ajax.post('/redis_server/save', params)
+            return data
         },
 
-        async [ActionTypes.REDIS_SERVER_GET_DATABASES]({ state }, connectionId) {
-            let data = await util.ajax.get(`/redis_server/${connectionId}/databases`)
+        async [ActionTypes.REDIS_SERVER_GET_DATABASE_LIST]({ state }, connectionId) {
+            let data = await util.ajax.get(`/redis_server/${connectionId}/database_list`)
             const node = state.redisServerList.find(i => i.value == connectionId)
             node['children'] = data
             return data
         },
 
-        async [ActionTypes.REDIS_DB_GET_KEYS](context, { serverId, dbNum, page }) {
+        async [ActionTypes.REDIS_DATABASE_GET_KEY_LIST](context, { serverId, dbNum, page }) {
             let data = await util.ajax.get(`/redis_db/${serverId}/${dbNum}/key_list/${page}`)
             return data
         },
 
-        async [ActionTypes.REDIS_DB_SET_KEY_VALUE](context, { serverId, dbNum, params }) {
+        async [ActionTypes.REDIS_DATABASE_SET_KEY_VALUE](context, { serverId, dbNum, params }) {
             let data = await util.ajax.post(`/redis_db/${serverId}/${dbNum}/save_key_value`, params)
             return data
         }

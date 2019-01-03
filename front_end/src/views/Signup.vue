@@ -10,7 +10,7 @@
             <el-input type="password" v-model="form.confirmPassword"></el-input>
         </el-form-item>
         <el-form-item>
-            <el-button type="primary" @click="submitForm">Submit</el-button>
+            <el-button type="primary" :disabled="disableSubmitButton" @click="submitForm">Submit</el-button>
             <el-button type="text" @click="() => this.$router.push({'name': 'login'})">Login</el-button>
         </el-form-item>
     </el-form>
@@ -18,10 +18,10 @@
 
 <script>
 import * as ActionTypes from '~/store/action-types'
+import util from '~/libs/util'
 
 export default {
     data() {
-
         const confirmPasswordEqual = (rule, value, callback) => {
             if (value && value !== this.form.password) {
                 callback(new Error('The two passwords don`t match.'))
@@ -31,6 +31,8 @@ export default {
         };
 
         return {
+            disableSubmitButton: false,
+
             form: {
                 name: null,
                 email: null,
@@ -55,23 +57,20 @@ export default {
     },
 
     methods: {
-        submitForm() {
-            this.$refs.form.validate(valid => {
-                if (valid) {
-                    this.$store.dispatch(ActionTypes.SIGNUP, {...this.form}).then(data => {
-                        for (let i in data['formError']) {
-                            let field = this.$refs.form.fields.find(j => j.prop === i)
-                            if (field) {
-                                field.validateState = 'error'
-                                field.validateMessage = data['formError'][i][0]
-                            }
-                        }
-                    }).catch(error => {
-
-                    })
+        async submitForm() {
+            try {
+                this.disableSubmitButton = true
+                const isValid = await util.validateForm(this.$refs.form)
+                if (isValid) {
+                    let data = await this.$store.dispatch(ActionTypes.SIGNUP, {...this.form})
+                    const flag = await util.setFormErrors(data, this.$refs.form)
                 }
-                return false
-            })
+                return isValid
+            } catch(error) {
+
+            } finally {
+                this.disableSubmitButton = false
+            }
         }
     }
 }

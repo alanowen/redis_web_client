@@ -35,13 +35,30 @@ util.ajax.interceptors.request.use(
 
 util.ajax.interceptors.response.use(
     function (response) {
-        const data = response.data
+        const { code, data, text, status } = response.data
+        switch(code) {
+            case 0:
+                // success
+                break
+            case 1:
+                // alert
+                vm.$message({
+                    message: text,
+                    duration: 1000,
+                    type: status
+                })
+                break
+            case 2:
+                // form errors
+                break
+        }
         return data
     },
 
     function (error) {
         if  (error && error.response) {
-            switch(error.response.status) {
+            const {data, status} = error.response
+            switch(status) {
                 case 400:
                     // bad request
                     break
@@ -71,7 +88,7 @@ util.ajax.interceptors.response.use(
                 case 500:
                     // server internal error
                     vm.$message({
-                        message: 'Error occurred, please try again later.',
+                        message: data,
                         type: 'error'
                     })
                     break

@@ -1,7 +1,6 @@
-from flask import jsonify
-
 from app import db
 from app.models import User
+from utils import alert_json
 from . import user_bp
 from .forms import SignupForm
 
@@ -19,6 +18,6 @@ def signup():
                      password=form.password.data)
         db.session.add(model)
         db.session.commit()
-        return jsonify([])
+        return alert_json(text='Your account has been created.')
     else:
-        return jsonify(formError=form.errors)
+        return form.errors_to_json()

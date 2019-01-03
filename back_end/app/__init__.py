@@ -39,7 +39,7 @@ def create_app(config_name):
             logger.exception(e)
         else:
             logger.error(e)
-        return make_response('INTERNAL SERVER ERROR'), 500
+        return make_response('Error occurred, please try again later.'), 500
 
     @app.after_request
     def after_request(response):

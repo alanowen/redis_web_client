@@ -1,5 +1,6 @@
-from flask import g, jsonify, request
+from flask import g, request
 
+from utils import success_json, alert_json
 from . import forms
 from . import redis_db_bp
 from .decorators import use_redis
@@ -20,7 +21,7 @@ def get_keys_of_database(page):
         if start <= index < end:
             data.append(item)
         elif index >= end:
-                break
+            break
 
     for index, item in enumerate(data):
         rows.append(
@@ -31,8 +32,8 @@ def get_keys_of_database(page):
             }
         )
 
-    return jsonify(
-        {
+    return success_json(
+        data={
             'total': total,
             'rows': rows
         }
@@ -58,9 +59,9 @@ def add_key_value():
         elif data_type == 'HASH':
             g.redis.hmset(key, form.hash_values.data)
 
-        return jsonify([])
+        return alert_json(text='Key value has been saved.')
 
-    return jsonify(formError=form.errors)
+    return form.errors_to_json()
 
 
 @redis_db_bp.route('/delete_key', methods=['POST'])

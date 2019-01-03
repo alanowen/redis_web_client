@@ -3,16 +3,17 @@
         <div class="grid-content">
             <div class="server-btns">
                 <el-button @click="addRedisServer">Add Server</el-button>
-                <el-button @click="freshDatabases">Refresh</el-button>
+                <el-button @click="freshDatabaseList">Refresh</el-button>
             </div>
-            <div class="server-list">
+            <div class="server-list" v-loading="loadingDatabaseList">
                 <el-tree 
                     :data="redisServerList" 
                     lazy 
-                    :load="loadDatabases"
+                    :load="loadDatabaseList"
                     highlight-current
                     :props="redisServerTreeProps"
-                    @node-click="clickDatabase">
+                    @node-contextmenu="rightClickTreeNode"
+                    @node-click="clickTreeNode">
                     <span class="custom-tree-node" slot-scope="{ node, data }">
                         {{ node.label }}
                         <template v-if="node.level === 1">
@@ -26,7 +27,7 @@
                                 <el-button
                                     type="text"
                                     size="mini"
-                                    @click="() => remove(node, data)">
+                                    @click.stop="() => removeRedisServer(node, data)">
                                     Delete
                                 </el-button>
                             </span>
@@ -48,7 +49,8 @@
             </el-tabs>
         </div>
 
-        <el-dialog :visible.sync="editDialogVisible">
+        <!-- edit redis server -->
+        <el-dialog :visible.sync="showingEditDialog">
             <el-form :model="form" ref="form">
                 <el-form-item 
                     label="Connection Name" 
@@ -81,7 +83,9 @@
                     label="Password" 
                     :label-width="labelWidth" 
                     prop="password">
-                    <el-input v-model="form.password" auto-complete="off"></el-input>
+                    <el-input v-model="form.password" :type="showingPasswordPlainText ? 'password': 'text'" auto-complete="off">
+                        <el-button slot="append" icon="el-icon-view" @click="showingPasswordPlainText = !showingPasswordPlainText"></el-button>
+                    </el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -113,7 +117,9 @@ export default {
                 dbNum: null,
             },
 
-            editDialogVisible: false,
+            loadingDatabaseList: false,
+            showingPasswordPlainText: false,
+            showingEditDialog: false,
 
             labelWidth: '',
 
@@ -134,20 +140,31 @@ export default {
     },
 
     mounted() {
-        this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_SERVERS)
+        this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_SERVER_LIST)
     },
 
     methods: {
 
-        loadDatabases(node, resolve) {
+        loadDatabaseList(node, resolve) {
+            this.loadingDatabaseList = true
             if (node.level === 0) {
+                setTimeout(() => {
+                    this.loadingDatabaseList = false
+                }, 700)
                 return resolve([])
             }
 
-            this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_DATABASES, node.data.value).then(data => {
+            if (node.data.children.length != 0) {
+            }
+
+            this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_DATABASE_LIST, node.data.value).then(data => {
                 resolve(data)
-            }).catch(error => {alert();resolve([])})
-            
+            }).catch(error => resolve([])
+            ).finally(() => {
+                setTimeout(() => {
+                    this.loadingDatabaseList = false                  
+                }, 700)
+            })
         },
 
         saveRedisServer() {
@@ -160,8 +177,8 @@ export default {
             })
         },
 
-        freshDatabases() {
-            this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_SERVERS)
+        freshDatabaseList() {
+            this.$store.dispatch(ActionTypes.REDIS_SERVER_GET_SERVER_LIST)
         },
 
         removeTab(targetName) {
@@ -181,7 +198,10 @@ export default {
             this.activeTab.tabName = activeName
         },
 
-        clickDatabase(data, node) {
+        rightClickTreeNode(event, node) {
+        },
+
+        clickTreeNode(data, node) {
 
             if (node.level == 1) {
 
@@ -213,23 +233,24 @@ export default {
             this.form.port = data.port
             this.form.password = data.password
 
-            this.editDialogVisible = true
+            this.showingEditDialog = true
         },
 
         addRedisServer() {
             if (this.$refs.form != undefined) {
-                console.log(this.$refs.form)
                 this.$refs.form.resetFields()
             }
-            this.editDialogVisible = true
+            this.showingEditDialog = true
         },
 
         closeEditDialog() {
-            this.editDialogVisible = false
+            this.showingEditDialog = false
         },
 
-        remove(node, data) {
-
+        removeRedisServer(node, data) {
+            this.$confirm('Do you want to delete this redis server connection?', 'Warning', {
+                type: 'warning'
+            })
         }
     }
 }

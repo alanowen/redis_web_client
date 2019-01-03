@@ -1,13 +1,17 @@
 from flask_wtf import FlaskForm
-from wtforms import Field, StringField, IntegerField
-from wtforms.meta import DefaultMeta
+from wtforms import Field, IntegerField
+
+from utils import form_errors_json
+
+
+class CommonForm(FlaskForm):
+
+    def errors_to_json(self):
+        return form_errors_json(data={'formErrors': self.errors})
 
 
 class BindNameMeta(FlaskForm.Meta):
-
-    def __init__(self):
-        super(BindNameMeta, self).__init__()
-        self.custom_names = {}
+    custom_names = {}
 
     def bind_field(self, form, unbound_field, options):
         if unbound_field in self.custom_names:
@@ -35,7 +39,7 @@ class NullableIntegerField(IntegerField):
         if valuelist:
             try:
                 value = valuelist[0]
-                if value == '':
+                if not value:
                     return None
                 else:
                     self.data = int(valuelist[0])

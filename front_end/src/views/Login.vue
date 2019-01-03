@@ -7,7 +7,7 @@
             <el-input v-model="form.password"></el-input>
         </el-form-item>
         <el-form-item>
-            <el-button type="primary" @click="submitForm">Login</el-button>
+            <el-button type="primary" :disabled="disableSubmitButton" @click="submitForm">Login</el-button>
             <div :style="{'display': 'inline'}">
                 <span>Don`t have a account ?</span>
                 <el-button type="text" @click="() => this.$router.push({ 'name': 'signup' })">Singup</el-button>
@@ -18,11 +18,13 @@
 
 <script>
 import * as ActionTypes from '~/store/action-types'
+import util from '~/libs/util'
 
 export default {
     data() {
 
         return {
+            disableSubmitButton: false,
             form: {
                 email: null,
                 password: null
@@ -40,11 +42,13 @@ export default {
     },
 
     methods: {
-        submitForm() {
-
-            this.$refs.form.validate(valid => {
-                if (valid) {
-                    this.$store.dispatch(ActionTypes.LOGIN, {...this.form}).then(data => {
+        async submitForm() {
+            try {
+                this.disableSubmitButton = true
+                const isValid = await util.validateForm(this.$refs.form)
+                if (isValid) {
+                    let flag = await this.$store.dispatch(ActionTypes.LOGIN, {...this.form})
+                    if (flag) {
                         this.$message({
                             message: 'Congrats, you`ve logged in.',
                             type: 'success',
@@ -57,10 +61,13 @@ export default {
                                 }
                             }
                         })
-                    })
+                    }
                 }
-                return false
-            })
+            } catch (error) {
+                throw error
+            } finally {
+                this.disableSubmitButton = false
+            }
         }
     }
 }

@@ -10,6 +10,10 @@
                 border
                 stripe>
                 <el-table-column
+                    type="selection"
+                    width="55">
+                </el-table-column>
+                <el-table-column
                     prop=""
                     width="100"
                     label="#">
@@ -61,7 +65,7 @@
         </div>
         
         <!-- EditKeyDialog -->
-        <el-dialog :visible.sync="editDialogVisible" :width="editDialogWidth">
+        <el-dialog :visible.sync="showEditDialog" :width="editDialogWidth">
             <el-form :model="form" ref="form" :label-position="'left'">
                 <el-form-item label="Key"
                     :label-width="formLabelWidth" 
@@ -176,8 +180,8 @@
                 </template>
             </el-form>
             <span slot="footer" class="dialog-footer">
-                    <el-button @click="closeEditDialog">Cancel</el-button>
-                    <el-button type="primary" @click="saveRedisKeyValue">Confirm</el-button>
+                <el-button @click="closeEditDialog">Cancel</el-button>
+                <el-button type="primary" @click="addRedisKeyValue" :disabled="disableSubmitButton">Confirm</el-button>
             </span>
         </el-dialog>
     </div>
@@ -187,6 +191,7 @@
 
 <script>
 import * as ActionTypes from '~/store/action-types'
+import util from '~/libs/util'
 
 export default {
 
@@ -204,7 +209,8 @@ export default {
 
             currentPage: 1,
 
-            editDialogVisible: false,
+            showEditDialog: false,
+            disableSubmitButton: false,
 
             editDialogWidth: '50%',
             formLabelWidth: '110px',
@@ -250,7 +256,7 @@ export default {
     },
 
     watch: {
-        editDialogVisible(n, o) {
+        showEditDialog(n, o) {
             if (n && this.$refs.form) {
                 this.$nextTick(() => {
                     this.$refs.form.resetFields()
@@ -274,7 +280,7 @@ export default {
 
         loadRedisDBKeys(page) {
             this.loading = true
-            this.$store.dispatch(ActionTypes.REDIS_DB_GET_KEYS, 
+            this.$store.dispatch(ActionTypes.REDIS_DATABASE_GET_KEY_LIST, 
             { 
                 serverId: this._serverId,
                 page: page,
@@ -283,34 +289,44 @@ export default {
                 this.data = data.rows
                 this.total = data.total
             }).finally(() => {
-                this.loading = false
+                setTimeout(() => {
+                    this.loading = false                    
+                }, 700);
             })
         },
 
         openEditDialog() {
-            this.editDialogVisible = true
+            this.showEditDialog = true
         },
 
         closeEditDialog() {
-            this.editDialogVisible = false
+            this.showEditDialog = false
         },
 
-        saveRedisKeyValue() {
-            this.$refs.form.validate(validate => {
-                if (validate) {
-                    this.$store.dispatch(ActionTypes.REDIS_DB_SET_KEY_VALUE, 
-                    {
+        async addRedisKeyValue() {
+            this.disableSubmitButton = true
+            const isValid = await util.validateForm(this.$refs.form)
+            
+            try {
+                if (isValid) {
+                    const data = await this.$store.dispatch(ActionTypes.REDIS_DATABASE_SET_KEY_VALUE, {
                         serverId: this._serverId, 
                         dbNum: this._dbNum, 
                         params: {...this.form}
-                    }).then(() => {
-                        this.loadRedisDBKeys(this.currentPage)
                     })
-                    return true
-                } else {
-                    return false
+
+                    const flag = await util.setFormErrors(data, this.$refs.form)
+                    if (flag) {
+                        this.showEditDialog = false
+                        this.loadRedisDBKeys(this.currentPage)
+                    }
                 }
-            })
+                return isValid
+            } catch(error) {
+
+            } finally {
+                this.disableSubmitButton = false
+            }
         },
 
         selectChange(value) {

@@ -1,10 +1,11 @@
-from flask_wtf import FlaskForm
+from flask import g
+from wtforms.validators import ValidationError
 from wtforms import StringField
 
-from utils.wtf import DynamicValueField, DynamicKeyValueField, BindNameMeta
+from utils.wtf import DynamicValueField, DynamicKeyValueField, BindNameMeta, CommonForm
 
 
-class KeyValueEditForm(FlaskForm):
+class KeyValueEditForm(CommonForm):
 
     Meta = BindNameMeta
 
@@ -21,3 +22,8 @@ class KeyValueEditForm(FlaskForm):
     zset_values = DynamicValueField(custom_name='zsetValue')
 
     hash_values = DynamicKeyValueField(custom_name='hashValues')
+
+    def validate_key(self, field):
+        keys = g.redis.keys(field.data)
+        if len(keys) > 0:
+            raise ValidationError('The key is used.')

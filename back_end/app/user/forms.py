@@ -1,11 +1,11 @@
-from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import ValidationError
 
 from app.models import User
+from utils.wtf import CommonForm
 
 
-class SignupForm(FlaskForm):
+class SignupForm(CommonForm):
     """
     Signup form
     """

@@ -14,4 +14,27 @@ util.ajax = axios.create({
     withCredentials: true
 })
 
+util.setFormErrors = async function(data, form) {
+    if (data && 'formErrors' in data) {
+        for (let i in data['formErrors']) {
+            let field = form.fields.find(j => j.prop === i)
+            if (field) {
+                field.validateState = 'error'
+                field.validateMessage = data['formErrors'][i][0]
+            }
+        }
+        return false
+    }
+    return true
+}
+
+util.validateForm = async function(form) {
+    let promise = new Promise((resolve, reject) => {
+        form.validate(isValidate => {
+            resolve(isValidate)
+        })
+    })
+    return promise
+}
+
 export default util

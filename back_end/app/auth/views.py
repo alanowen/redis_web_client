@@ -1,7 +1,8 @@
-from flask import jsonify, g
+from flask import g
 
-from app import token_auth, multi_auth
+from app import token_auth
 from app.models import User
+from utils import success_json, alert_json
 from . import auth_bp
 from .forms import LoginForm
 
@@ -38,8 +39,8 @@ def login():
         if user and user.verify_password(form.password.data):
             g.current_user = user
             token = user.generate_token()
-            return jsonify(token=token)
+            return success_json(data=token)
         else:
-            return jsonify([])
+            return alert_json(status='error', text='Email or password is incorrect.')
     else:
-        return jsonify(formError=form.errors)
+        return form.errors_to_json()

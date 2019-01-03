@@ -1,8 +1,9 @@
-from flask_wtf import FlaskForm
 from wtforms import StringField
 
+from utils.wtf import CommonForm
 
-class LoginForm(FlaskForm):
+
+class LoginForm(CommonForm):
     """
     Login form
     """

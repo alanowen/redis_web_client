@@ -1,13 +1,12 @@
 from flask import g
-from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField
 from wtforms.validators import ValidationError
 
 from app.models import RedisServer
-from utils.wtf import NullableIntegerField, BindNameMeta
+from utils.wtf import NullableIntegerField, BindNameMeta, CommonForm
 
 
-class RedisServerEditForm(FlaskForm):
+class RedisServerEditForm(CommonForm):
     """
     Redis server connection
     """
@@ -26,7 +25,9 @@ class RedisServerEditForm(FlaskForm):
 
     def validate_connection_name(self, field):
         model = RedisServer.query.filter(RedisServer.connection_name == field.data,
-                                         RedisServer.user_id == g.current_user.id).first()
+                                         RedisServer.user_id == g.current_user.id,
+                                         RedisServer.id != self.id.data).first()
 
         if model:
             raise ValidationError('Connection name already exists.')
+

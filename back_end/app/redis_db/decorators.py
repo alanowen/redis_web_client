@@ -33,10 +33,15 @@ def _wrap_redis(f):
     def _decorator(*args, **kwargs):
         if 'redis' not in g:
             model = g.current_user.get_redis_server(g.redis_server_id)
-            redis = Redis(host=model.host,
-                          port=model.port,
-                          password=model.password,
-                          db=g.redis_db_num)
+            if model.password:
+                redis = Redis(host=model.host,
+                              port=model.port,
+                              password=model.password,
+                              db=g.redis_db_num)
+            else:
+                redis = Redis(host=model.host,
+                              port=model.port,
+                              db=g.redis_db_num)
             g.redis = redis
         result = f(*args, **kwargs)
         return result
