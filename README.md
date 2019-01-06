@@ -11,3 +11,5 @@ Front end uses:
 Back end uses:
 * Python3
 * flask(a micro web framework of Python)
+
+# Features
