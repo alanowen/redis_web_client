@@ -26,8 +26,15 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///data.db'
 
 
+class TestingConfig(Config):
+    TESTING = True
+
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(base_dir, 'data-test.db')
+
+
 config = {
     'production': ProductionConfig,
     'development': DevelopmentConfig,
+    'testing': TestingConfig,
     'default': DevelopmentConfig
 }

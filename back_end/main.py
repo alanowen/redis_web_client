@@ -20,6 +20,13 @@ def make_context():
 
 
 @app.cli.command()
+def test():
+    import unittest
+    tests = unittest.TestLoader().discover('tests')
+    unittest.TextTestRunner(verbosity=2).run(tests)
+
+
+@app.cli.command()
 @click.option('--num', default=1000)
 @click.option('--host', default='127.0.0.1')
 @click.option('--port', default=6379)
