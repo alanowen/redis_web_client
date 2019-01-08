@@ -1,4 +1,7 @@
 # redis_web_client
+
+[![Build Status](https://www.travis-ci.org/alanowen/redis_web_client.svg?branch=master)](https://www.travis-ci.org/alanowen/redis_web_client)
+
 This project is a single page web tool of Redis web admin.
 
 Front end uses:
