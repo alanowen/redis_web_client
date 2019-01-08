@@ -1,9 +1,6 @@
 language: python
 python:
   - "3.6"
-env:
-  - FLASK_ENV=testing
-  - FLASK_APP=back_end/main.py
 install:
   - pip install -r back_end/requirements
 script:
