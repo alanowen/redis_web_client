@@ -43,10 +43,11 @@ def create_app(config_name):
 
     @app.after_request
     def after_request(response):
-        response.headers['Access-Control-Allow-Origin'] = '%s' % request.environ['HTTP_ORIGIN']
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,DELETE,OPTIONS,PUT'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        if app.debug:
+            response.headers['Access-Control-Allow-Origin'] = '%s' % request.environ['HTTP_ORIGIN']
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Allow-Methods'] = 'GET,POST,DELETE,OPTIONS,PUT'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
         return response
 
     return app

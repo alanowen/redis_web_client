@@ -1,3 +1,6 @@
+import os
+import unittest
+import tempfile
 from time import ctime
 from uuid import uuid4
 
@@ -24,6 +27,25 @@ def test():
     import unittest
     tests = unittest.TestLoader().discover('tests')
     unittest.TextTestRunner(verbosity=2).run(tests)
+
+
+@app.cli.command()
+def coverage():
+    import coverage
+
+    cov = coverage.Coverage(branch=True, include='app/*')
+    cov.start()
+
+    tests = unittest.TestLoader().discover('tests')
+    unittest.TextTestRunner(verbosity=2).run(tests)
+
+    cov.stop()
+    cov.report()
+    cov.save()
+    cov_dir = os.path.join(tempfile.gettempdir(), 'coverage')
+    cov.html_report(directory=cov_dir)
+    print('Coverage report: %s' % os.path.normpath('%s/index.html' % cov_dir))
+    cov.erase()
 
 
 @app.cli.command()
